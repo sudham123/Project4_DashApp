@@ -109,6 +109,7 @@ movie_rows = group_movies_per_row()
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
 
 
 def render_rating_movies():
