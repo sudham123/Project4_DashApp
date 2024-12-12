@@ -15,7 +15,7 @@ movies = pd.DataFrame(movie_data, columns=['movie_id', 'title', 'genres'])
 movies['movie_id'] = movies['movie_id'].astype(int)
 
 
-smatrix2 = pd.read_csv("output.csv")
+smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/output.csv')
 movie_mapping = dict(zip(['m' + str(mid) for mid in movies['movie_id']], movies['title']))
 first_100_columns = smatrix2.columns
 mapped_titles = []
@@ -109,7 +109,7 @@ movie_rows = group_movies_per_row()
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server = app.server
+server  = app.server
 
 
 def render_rating_movies():
