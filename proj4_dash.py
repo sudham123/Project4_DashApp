@@ -93,25 +93,25 @@ def myIBCF(smatrix2, newuser):
 
   # top_10_indices = []
   movie_names = []
-#   if top_10_predictions.isna().any():
+  if top_10_predictions.isna().any():
 
-#     top_10_predictions = top_10_predictions.dropna()
-#     filled_amt = len(top_10_predictions)
-#     top_10_indices = top_10_predictions.index
-#     un2 = pd.Series(unrated).iloc[top_10_indices]
-#     movie_names_temp = pd.DataFrame(newuser.iloc[un2].index.values)
-#     top10_part1 = getTopMoviesByRatings()
+    top_10_predictions = top_10_predictions.dropna()
+    filled_amt = len(top_10_predictions)
+    top_10_indices = top_10_predictions.index
+    un2 = pd.Series(unrated).iloc[top_10_indices]
+    movie_names_temp = pd.DataFrame(newuser.iloc[un2].index.values)
+    top10_part1 = getTopMoviesByRatings()
 
-#     notrated_top = anti_join(top10_part1, rated_mov_names, on=0)
-#     not_picked = anti_join(notrated_top, movie_names_temp, on=0)
+    notrated_top = anti_join(top10_part1, rated_mov_names, on=0)
+    not_picked = anti_join(notrated_top, movie_names_temp, on=0)
 
-#     subs = not_picked.head(10 - filled_amt)
-#     movie_names = pd.concat([movie_names_temp, subs]).values
+    subs = not_picked.head(10 - filled_amt)
+    movie_names = pd.concat([movie_names_temp, subs]).values
 
-#   else:
-  top_10_indices = top_10_predictions.index
-  un2 = pd.Series(unrated).iloc[top_10_indices]
-  movie_names = newuser.iloc[un2].index.values
+  else:
+    top_10_indices = top_10_predictions.index
+    un2 = pd.Series(unrated).iloc[top_10_indices]
+    movie_names = newuser.iloc[un2].index.values
 
 
 
