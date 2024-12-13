@@ -39,7 +39,9 @@ import numpy as np
 # smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/output.csv')
 # smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/final_smatrix.csv')
 
-R_matrix = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/Rmat.csv')
+# R_matrix = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/Rmat.csv')
+
+
 
 def anti_join(df_left, df_right, on):
 
@@ -49,13 +51,35 @@ def anti_join(df_left, df_right, on):
 
 
 def getTopMoviesByRatings():
-  avg_ratings = R_matrix.mean(axis=0)
-  num_ratings = R_matrix.notna().sum(axis=0)
+#   avg_ratings = R_matrix.mean(axis=0)
+#   num_ratings = R_matrix.notna().sum(axis=0)
+  
 
-  movies_filtered = num_ratings > 1000
+#   movies_filtered = num_ratings > 1000
 
-  top_10_movies = avg_ratings[movies_filtered].sort_values(ascending=False)
-  return pd.DataFrame(top_10_movies.index.values)
+#   top_10_movies = avg_ratings[movies_filtered].sort_values(ascending=False)
+#   return pd.DataFrame(top_10_movies.index.values)
+    avg_ratings = pd.read_csv('test.csv', index_col=0).iloc[:, 0]  # Load as Series
+    num_ratings = pd.read_csv('test1.csv', index_col=0)
+
+    # Ensure num_ratings is a Series (extract only the first column if it's a DataFrame)
+    num_ratings = num_ratings.iloc[:, 0]
+
+    # Ensure all entries are integers, coerce invalid entries to 0
+    num_ratings = pd.to_numeric(num_ratings, errors='coerce').fillna(0).astype(int)
+
+    # Align indices explicitly
+    num_ratings = num_ratings.reindex(avg_ratings.index, fill_value=0)  # Ensure alignment with avg_ratings
+
+    # Filter movies with more than 1000 ratings
+    movies_filtered = num_ratings > 1000
+
+    # Apply filter to avg_ratings and sort in descending order
+    top_10_movies = avg_ratings[movies_filtered].sort_values(ascending=False)
+
+    # Convert index to DataFrame
+    result_df = pd.DataFrame(top_10_movies.index)
+    return result_df
 
 
 
