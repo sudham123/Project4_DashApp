@@ -5,7 +5,7 @@ from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 from dash.dependencies import ALL, State
 import numpy as np 
-from myfuns import myIBCF
+# from myfuns import myIBCF
 # Fetch movie data
 myurl = "https://liangfgithub.github.io/MovieData/movies.dat?raw=true"
 response = requests.get(myurl)
@@ -31,6 +31,108 @@ result_df = pd.DataFrame({
     'title': mapped_titles
 })
 movies = result_df
+
+import pandas as pd
+import requests
+import numpy as np
+# Define the URL for movie data
+# smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/output.csv')
+# smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/final_smatrix.csv')
+
+R_matrix = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/Rmat.csv')
+
+def anti_join(df_left, df_right, on):
+
+    merged_df = pd.merge(df_left, df_right, on=on, how='left', indicator=True)
+    return merged_df[merged_df['_merge'] == 'left_only'].drop(columns='_merge')
+
+
+
+def getTopMoviesByRatings():
+  avg_ratings = R_matrix.mean(axis=0)
+  num_ratings = R_matrix.notna().sum(axis=0)
+
+  movies_filtered = num_ratings > 1000
+
+  top_10_movies = avg_ratings[movies_filtered].sort_values(ascending=False)
+  return pd.DataFrame(top_10_movies.index.values)
+
+
+
+
+def myIBCF(smatrix2, newuser):
+  previously_rated = np.where(~np.isnan(newuser))[0]
+  rated_mov_names = pd.DataFrame(newuser.iloc[previously_rated].index.values)
+
+
+  unrated = np.where(np.isnan(newuser))[0]
+  # print(unrated)
+  ratings = newuser.iloc[previously_rated]
+
+  preds = []
+
+  for i in unrated:
+    similarity = smatrix2.iloc[i, previously_rated]
+    weighted_ratings =  similarity * ratings
+
+
+
+    sim_sum = similarity.sum()
+
+    if sim_sum == 0:
+      prediction = np.nan
+    else:
+      prediction = weighted_ratings.sum() / sim_sum
+    preds.append(prediction)
+
+  preds_series = pd.Series(preds)
+
+  top_10_predictions = preds_series.nlargest(10)
+
+
+
+  # top_10_indices = []
+  movie_names = []
+#   if top_10_predictions.isna().any():
+
+#     top_10_predictions = top_10_predictions.dropna()
+#     filled_amt = len(top_10_predictions)
+#     top_10_indices = top_10_predictions.index
+#     un2 = pd.Series(unrated).iloc[top_10_indices]
+#     movie_names_temp = pd.DataFrame(newuser.iloc[un2].index.values)
+#     top10_part1 = getTopMoviesByRatings()
+
+#     notrated_top = anti_join(top10_part1, rated_mov_names, on=0)
+#     not_picked = anti_join(notrated_top, movie_names_temp, on=0)
+
+#     subs = not_picked.head(10 - filled_amt)
+#     movie_names = pd.concat([movie_names_temp, subs]).values
+
+#   else:
+  top_10_indices = top_10_predictions.index
+  un2 = pd.Series(unrated).iloc[top_10_indices]
+  movie_names = newuser.iloc[un2].index.values
+
+
+
+
+  # top_10_indices = preds_series.nlargest(10).index
+
+  # print(top_10_indices)
+
+
+  return movie_names
+
+
+
+  # map_indicies = unrated.index[top_10_indices]
+  # print(top_10_movies)
+
+  # known_ratings = new
+  # print(unrated)
+  # print(previously_rated)
+
+  # similarity = smatrix2.loc[previously_rated.index]
 
 
 def get_displayed_movies():
@@ -254,7 +356,7 @@ def handle_navigation(get_click, go_back_click, close_modal_click, all_ratings):
         print(user_ratings)
         newuser_vector = map_user_ratings_to_full_vector(user_ratings)
         # print(f"user chosen {newuser_vector}")
-        recommendations = myIBCF(newuser_vector)
+        recommendations = myIBCF(smatrix2, newuser_vector)
         print(f"receomnadtion returned  {recommendations}")
         recommended_movies = map_indices_to_movies(recommendations, movies)
         # print(recommendations)
