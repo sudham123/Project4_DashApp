@@ -15,7 +15,11 @@ movies = pd.DataFrame(movie_data, columns=['movie_id', 'title', 'genres'])
 movies['movie_id'] = movies['movie_id'].astype(int)
 
 
-smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/output.csv')
+# smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/output.csv')
+smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/final_smatrix.csv')
+
+
+
 movie_mapping = dict(zip(['m' + str(mid) for mid in movies['movie_id']], movies['title']))
 first_100_columns = smatrix2.columns
 mapped_titles = []
@@ -197,10 +201,29 @@ def map_user_ratings_to_full_vector(user_rated_movies):
 
 
 
+# def map_indices_to_movies(indices, movies_df):
+#     # recommended_movies = movies_df[movies_df['movie_id'].isin(indices)].reset_index()
+#     # print(f"recommnded movies \n {recommended_movies}")
+   
+#     return recommended_movies
+
+def flatten_indices(indices):
+    """Flatten indices only if they are in a 2D structure."""
+    if isinstance(indices, np.ndarray) and indices.ndim > 1:  # Handle 2D arrays safely
+        return indices.flatten().tolist()
+    elif isinstance(indices[0], list):  # Fallback check for lists of lists
+        return [item for sublist in indices for item in sublist]
+    return indices  # Assume it's already 1D if neither applies
+
+
 def map_indices_to_movies(indices, movies_df):
-    recommended_movies = movies_df[movies_df['movie_id'].isin(indices)].reset_index()
-    print(f"recommnded movies \n {recommended_movies}")
+    # Dynamically flatten the indices if necessary
+    flat_indices = flatten_indices(indices)
+    print("Flattened indices:", flat_indices) 
+    recommended_movies = movies_df[movies_df['movie_id'].isin(flat_indices)].reset_index()
     return recommended_movies
+
+
 
 
 
@@ -221,8 +244,8 @@ def handle_navigation(get_click, go_back_click, close_modal_click, all_ratings):
     triggered_id = dash.callback_context.triggered_id or ""
 
     if triggered_id == "get_recommendations":
-        if all(v is None or v == 0 for v in all_ratings):
-            return render_rating_movies(), {"display": "block"}, {"display": "none"}, True
+        # if all(v is None or v == 0 for v in all_ratings):
+        #     return render_rating_movies(), {"display": "block"}, {"display": "none"}, True
 
         user_ratings = {
             movies.iloc[idx]['title']: int(rating)
@@ -230,7 +253,7 @@ def handle_navigation(get_click, go_back_click, close_modal_click, all_ratings):
         }
         print(user_ratings)
         newuser_vector = map_user_ratings_to_full_vector(user_ratings)
-        print(f"user chosen {newuser_vector}")
+        # print(f"user chosen {newuser_vector}")
         recommendations = myIBCF(newuser_vector)
         print(f"receomnadtion returned  {recommendations}")
         recommended_movies = map_indices_to_movies(recommendations, movies)
@@ -266,4 +289,5 @@ def handle_navigation(get_click, go_back_click, close_modal_click, all_ratings):
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
 
