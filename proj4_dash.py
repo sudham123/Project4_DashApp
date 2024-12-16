@@ -15,9 +15,9 @@ movies = pd.DataFrame(movie_data, columns=['movie_id', 'title', 'genres'])
 movies['movie_id'] = movies['movie_id'].astype(int)
 
 
-# smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/output.csv')
-smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/final_smatrix.csv')
+# smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/final_smatrix.csv')
 
+smatrix2 = pd.read_csv('simmatrix2_top30.csv')
 
 
 movie_mapping = dict(zip(['m' + str(mid) for mid in movies['movie_id']], movies['title']))
@@ -32,33 +32,17 @@ result_df = pd.DataFrame({
 })
 movies = result_df
 
-import pandas as pd
-import requests
-import numpy as np
-# Define the URL for movie data
-# smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/output.csv')
-# smatrix2 = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/final_smatrix.csv')
-
-# R_matrix = pd.read_csv('https://raw.githubusercontent.com/sudham123/Project4_App/refs/heads/main/Rmat.csv')
 
 
 
 def anti_join(df_left, df_right, on):
-
     merged_df = pd.merge(df_left, df_right, on=on, how='left', indicator=True)
     return merged_df[merged_df['_merge'] == 'left_only'].drop(columns='_merge')
 
 
 
 def getTopMoviesByRatings():
-#   avg_ratings = R_matrix.mean(axis=0)
-#   num_ratings = R_matrix.notna().sum(axis=0)
-  
 
-#   movies_filtered = num_ratings > 1000
-
-#   top_10_movies = avg_ratings[movies_filtered].sort_values(ascending=False)
-#   return pd.DataFrame(top_10_movies.index.values)
     avg_ratings = pd.read_csv('test.csv', index_col=0).iloc[:, 0]  # Load as Series
     num_ratings = pd.read_csv('test1.csv', index_col=0)
 
@@ -415,5 +399,4 @@ def handle_navigation(get_click, go_back_click, close_modal_click, all_ratings):
 
 if __name__ == "__main__":
     app.run_server(debug=True)
-
 
