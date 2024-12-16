@@ -22,6 +22,7 @@ smatrix2 = pd.read_csv('simmatrix2_top30.csv')
 
 movie_mapping = dict(zip(['m' + str(mid) for mid in movies['movie_id']], movies['title']))
 first_100_columns = smatrix2.columns
+print(f"size: {smatrix2.shape}")
 mapped_titles = []
 for col in first_100_columns:
     if col in movie_mapping:
@@ -30,7 +31,10 @@ result_df = pd.DataFrame({
     'movie_id': first_100_columns,
     'title': mapped_titles
 })
-movies = result_df
+combined_movies = pd.concat([result_df, movies[['movie_id', 'title']]], ignore_index=True)
+combined_movies = combined_movies.dropna(subset=['title']).drop_duplicates(subset=['movie_id'])
+movies = combined_movies
+print(movies)
 
 
 
@@ -63,6 +67,7 @@ def getTopMoviesByRatings():
 
     # Convert index to DataFrame
     result_df = pd.DataFrame(top_10_movies.index)
+    print(f"getTopMovies {result_df}")
     return result_df
 
 
@@ -144,7 +149,7 @@ def myIBCF(smatrix2, newuser):
 
 
 def get_displayed_movies():
-    return movies.head(100)
+    return movies.head(110)
 
 
 def get_movie_card(movie):
@@ -182,6 +187,7 @@ def get_movie_card(movie):
     )
 
 def get_movie_card_fortop10(movie_row):
+    print(f"Processing movie {movie_row['movie_id'][1:]}: {movie_row['title'] }")
     return html.Div(
         dbc.Card(
             [
@@ -206,15 +212,69 @@ def get_movie_card_fortop10(movie_row):
         className="col mb-4",
     )
 
+
 def group_movies_per_row():
     movie_cards = [get_movie_card(movie) for index, movie in get_displayed_movies().iterrows()]
     grouped_movies = [movie_cards[i:i + 5] for i in range(0, len(movie_cards), 5)]
     return grouped_movies
 
+# def group_movies_for_recommendations(movies_df):
+#     print(f"Total movies in movies_df: {len(movies_df)}")
+#     print(f"Movies DataFrame indices: {movies_df.index}")
+#     movie_cards = [get_movie_card_fortop10(row) for index, row in movies_df.iterrows()]
+#     grouped_movies = [movie_cards[i:i + 5] for i in range(0, len(movie_cards), 5)]
+#     # print(f"group {grouped_movies}")
+#     return grouped_movies
+def get_movie_card_fortop10(movie_row):
+    movie_id_str = str(movie_row['movie_id'])
+    # print(f"Processing movie {movie_id_str}: {movie_row['title']}")
+    return html.Div(
+        dbc.Card(
+            [
+                dbc.CardImg(
+                    src=f"https://liangfgithub.github.io/MovieImages/{movie_id_str}.jpg?raw=true",
+                    top=True,
+                    style={
+                        "height": "250px",
+                        "width": "200px",
+                        "object-fit": "contain",
+                        "margin": "auto",
+                    },
+                ),
+                dbc.CardBody(
+                    [
+                        html.H6(movie_row['title'], className="card-title text-center"),
+                    ]
+                ),
+            ],
+            className="h-100",
+        ),
+        className="col mb-4",
+    )
+
+
 def group_movies_for_recommendations(movies_df):
-    movie_cards = [get_movie_card_fortop10(row) for index, row in movies_df.iterrows()]
+    # Debugging: Log number of rows and indices in the DataFrame
+    # print(f"Total movies in movies_df: {len(movies_df)}")
+    # print(f"Movies DataFrame indices: {movies_df.index}")
+
+    # Create movie cards
+    movie_cards = []
+    for index, row in movies_df.iterrows():
+        # print(f"Iterating over index {index}")
+        movie_card = get_movie_card_fortop10(row)
+        movie_cards.append(movie_card)
+
+    # Debugging: Log the number of movie cards created
+    # print(f"Total movie cards created: {len(movie_cards)}")
+
+    # Group movies into sets of 5
     grouped_movies = [movie_cards[i:i + 5] for i in range(0, len(movie_cards), 5)]
+
+    # Debugging: Log the number of groups created
+    # print(f"Total groups created: {len(grouped_movies)}")
     return grouped_movies
+
 
 
 
@@ -319,18 +379,27 @@ def map_user_ratings_to_full_vector(user_rated_movies):
 
 def flatten_indices(indices):
     """Flatten indices only if they are in a 2D structure."""
-    if isinstance(indices, np.ndarray) and indices.ndim > 1:  # Handle 2D arrays safely
+    if isinstance(indices, np.ndarray) and indices.ndim > 1: 
         return indices.flatten().tolist()
-    elif isinstance(indices[0], list):  # Fallback check for lists of lists
+    elif isinstance(indices[0], list): 
         return [item for sublist in indices for item in sublist]
-    return indices  # Assume it's already 1D if neither applies
+    return indices 
 
-
+# def map_indices_to_movies(indices, movies_df):
+#     flat_indices = flatten_indices(indices)
+#     print("Flattened indices:", flat_indices) 
+#     recommended_movies = movies_df[movies_df['movie_id'].isin(flat_indices)].reset_index()
+#     return recommended_movies
 def map_indices_to_movies(indices, movies_df):
-    # Dynamically flatten the indices if necessary
     flat_indices = flatten_indices(indices)
-    print("Flattened indices:", flat_indices) 
-    recommended_movies = movies_df[movies_df['movie_id'].isin(flat_indices)].reset_index()
+    # print("Flattened indices:", flat_indices)
+
+    # Strip 'm' prefix from the indices
+    stripped_indices = [idx[1:] if idx.startswith('m') else idx for idx in flat_indices]
+    # print("Stripped indices:", stripped_indices)
+
+    # Perform filtering with the cleaned indices
+    recommended_movies = movies_df[movies_df['movie_id'].astype(str).isin(stripped_indices)].reset_index()
     return recommended_movies
 
 
@@ -361,13 +430,13 @@ def handle_navigation(get_click, go_back_click, close_modal_click, all_ratings):
             movies.iloc[idx]['title']: int(rating)
             for idx, rating in enumerate(all_ratings) if rating and rating > 0
         }
-        print(user_ratings)
+        # print(user_ratings)
         newuser_vector = map_user_ratings_to_full_vector(user_ratings)
         # print(f"user chosen {newuser_vector}")
         recommendations = myIBCF(smatrix2, newuser_vector)
-        print(f"receomnadtion returned  {recommendations}")
+        # print(f"receomnadtion returned  {recommendations}")
         recommended_movies = map_indices_to_movies(recommendations, movies)
-        # print(recommendations)
+        # print(f"inside handler {len(recommended_movies)}")
 
         recommendation_rows = group_movies_for_recommendations(recommended_movies)
 
